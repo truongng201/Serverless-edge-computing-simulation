@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react"
+import React from "react"
 
 // SimulationCanvas: Handles the canvas drawing and interaction
 export default function SimulationCanvas({
