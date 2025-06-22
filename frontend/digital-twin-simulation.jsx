@@ -34,18 +34,10 @@ import {
 export default function Component() {
   const canvasRef = useRef(null)
   const [users, setUsers] = useState([])
-  const [edgeNodes, setEdgeNodes] = useState([
-    { id: "edge-1", x: 200, y: 200, capacity: 100, currentLoad: 0, replicas: [], coverage: 120 },
-    { id: "edge-2", x: 600, y: 200, capacity: 100, currentLoad: 0, replicas: [], coverage: 120 },
-    { id: "edge-3", x: 400, y: 400, capacity: 100, currentLoad: 0, replicas: [], coverage: 120 },
-    { id: "edge-4", x: 200, y: 600, capacity: 100, currentLoad: 0, replicas: [], coverage: 120 },
-    { id: "edge-5", x: 600, y: 600, capacity: 100, currentLoad: 0, replicas: [], coverage: 120 },
-  ])
+  const [edgeNodes, setEdgeNodes] = useState([])
 
   // Central nodes - main servers/coordinators
-  const [centralNodes, setCentralNodes] = useState([
-    { id: "central-1", x: 400, y: 300, capacity: 500, currentLoad: 0, coverage: 200, type: "main" },
-  ])
+  const [centralNodes, setCentralNodes] = useState([])
 
   const [isSimulating, setIsSimulating] = useState(false)
   const [simulationSpeed, setSimulationSpeed] = useState([1])
