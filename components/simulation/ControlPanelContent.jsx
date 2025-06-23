@@ -225,7 +225,7 @@ export default function ControlPanelContent({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Size: {selectedUser.size}px</Label>
+                  <Label className="text-xs">Size: {selectedUser.size}</Label>
                   <Slider value={[selectedUser.size]} onValueChange={([value]) => updateSelectedUser({ size: value })} max={20} min={5} step={1} className="h-4" />
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
@@ -362,7 +362,7 @@ export default function ControlPanelContent({
               <Slider value={userSpeed} onValueChange={setUserSpeed} max={10} min={0.5} step={0.5} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Size: {userSize[0]}px</Label>
+              <Label className="text-xs">Size: {userSize[0]}</Label>
               <Slider value={userSize} onValueChange={setUserSize} max={15} min={5} step={1} />
             </div>
           </CardContent>
