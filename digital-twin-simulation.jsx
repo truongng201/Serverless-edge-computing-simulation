@@ -9,7 +9,7 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
-import { calculateDistance, findNearestNode } from "@/lib/helper";
+import { calculateDistance, findNearestNode, getAllNodes } from "@/lib/helper";
 
 export default function Component() {
   const canvasRef = useRef(null);
@@ -73,14 +73,6 @@ export default function Component() {
     gravity: "Gravity Model",
   };
 
-
-  // Get all available nodes for connection
-  const getAllNodes = () => {
-    return [
-      ...edgeNodes.map((node) => ({ ...node, type: "edge" })),
-      ...centralNodes.map((node) => ({ ...node, type: "central" })),
-    ];
-  };
 
   // Calculate latency based on connection
   const calculateLatency = (user, nodeId, nodeType) => {
@@ -1236,7 +1228,6 @@ export default function Component() {
           setAutoAssignment={setAutoAssignment}
           algorithms={algorithms}
           calculateDistance={calculateDistance}
-          getAllNodes={getAllNodes}
           calculateLatency={calculateLatency}
           connectUserToNode={connectUserToNode}
           disconnectUser={disconnectUser}
