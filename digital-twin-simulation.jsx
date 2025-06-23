@@ -158,49 +158,67 @@ export default function Component() {
 
   // Disconnect user from all nodes
   const disconnectUser = (userId) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        const user = prevUsers[i];
         if (user.id === userId) {
-          return {
+          newUsers.push({
             ...user,
             assignedEdge: null,
             assignedCentral: null,
             manualConnection: false,
             latency: 100 + Math.random() * 50,
-          };
+          });
+        } else {
+          newUsers.push(user);
         }
-        return user;
-      })
-    );
+      }
+      return newUsers;
+    });
   };
 
   // Reset all manual connections
   const resetAllConnections = () => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => ({
-        ...user,
-        manualConnection: false,
-      }))
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        newUsers.push({ ...prevUsers[i], manualConnection: false });
+      }
+      return newUsers;
+    });
   };
 
   // Update selected user properties
   const updateSelectedUser = (updates) => {
     if (!selectedUser) return;
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === selectedUser.id ? { ...user, ...updates } : user
-      )
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        const user = prevUsers[i];
+        if (user.id === selectedUser.id) {
+          newUsers.push({ ...user, ...updates });
+        } else {
+          newUsers.push(user);
+        }
+      }
+      return newUsers;
+    });
     setSelectedUser((prev) => ({ ...prev, ...updates }));
   };
 
   // Delete selected user
   const deleteSelectedUser = () => {
     if (!selectedUser) return;
-    setUsers((prevUsers) =>
-      prevUsers.filter((user) => user.id !== selectedUser.id)
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        if (prevUsers[i].id !== selectedUser.id) {
+          newUsers.push(prevUsers[i]);
+        }
+      }
+      return newUsers;
+    });
     setSelectedUser(null);
   };
 
@@ -937,7 +955,7 @@ export default function Component() {
         );
         if (assignedCentral) {
           ctx.strokeStyle = user.manualConnection
-            ? "rgba(99, 102, 241, 0.8)"
+            ? "rgba(99, 102,241, 0.8)"
             : "rgba(99, 102,241, 0.4)";
           ctx.lineWidth = user.manualConnection ? 2 / zoomLevel : 1 / zoomLevel;
           if (user.manualConnection) {
