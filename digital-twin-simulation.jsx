@@ -1130,7 +1130,7 @@ export default function Component() {
       case "both":
         return "Full Edit: Drag nodes and users • Click to select";
       default:
-        return "Click to add users • Mouse wheel to zoom • Ctrl+drag to pan";
+        return "Click to add users • Mouse wheel to zoom • Ctrl+drag to pan the map";
     }
   };
 
