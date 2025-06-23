@@ -393,7 +393,7 @@ export default function ControlPanelContent({
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Coverage: {centralCoverage[0]}px</Label>
-              <Slider value={centralCoverage} onValueChange={setCentralCoverage} max={300} min={100} step={20} />
+              <Slider value={centralCoverage} onValueChange={setCentralCoverage} max={300} min={0} step={20} />
             </div>
             {selectedCentral && (
               <div className="p-2 bg-blue-50 rounded text-xs">
@@ -429,7 +429,7 @@ export default function ControlPanelContent({
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Coverage: {edgeCoverage[0]}px</Label>
-              <Slider value={edgeCoverage} onValueChange={setEdgeCoverage} max={200} min={50} step={10} />
+              <Slider value={edgeCoverage} onValueChange={setEdgeCoverage} max={200} min={0} step={10} />
             </div>
             {selectedEdge && (
               <div className="p-2 bg-green-50 rounded text-xs">
