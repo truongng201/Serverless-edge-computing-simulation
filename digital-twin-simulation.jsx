@@ -9,7 +9,7 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
-import { calculateDistance } from "@/lib/helper";
+import { calculateDistance, findNearestNode } from "@/lib/helper";
 
 export default function Component() {
   const canvasRef = useRef(null);
@@ -73,37 +73,6 @@ export default function Component() {
     gravity: "Gravity Model",
   };
 
-  // Find nearest edge node to a user
-  const findNearestEdge = (user) => {
-    if (edgeNodes.length === 0) return null;
-    return edgeNodes.reduce((nearest, edge) => {
-      const distanceToEdge = calculateDistance(user.x, user.y, edge.x, edge.y);
-      const distanceToNearest = calculateDistance(
-        user.x,
-        user.y,
-        nearest.x,
-        nearest.y
-      );
-      return distanceToEdge < distanceToNearest ? edge : nearest;
-    });
-  };
-
-  // Find nearest central node to a user
-  const findNearestCentral = (user) => {
-    if (centralNodes.length === 0) return null;
-    return centralNodes.reduce((nearest, central) => {
-      const distanceToCentral = calculateDistance(
-        user.x,
-        user.y,
-        central.x,
-        central.y
-      );
-      const distanceToNearest = nearest
-        ? calculateDistance(user.x, user.y, nearest.x, nearest.y)
-        : Number.POSITIVE_INFINITY;
-      return distanceToCentral < distanceToNearest ? central : nearest;
-    });
-  };
 
   // Get all available nodes for connection
   const getAllNodes = () => {
@@ -333,8 +302,8 @@ export default function Component() {
         };
       }
 
-      const nearestEdge = findNearestEdge(user);
-      const nearestCentral = findNearestCentral(user);
+      const nearestEdge = findNearestNode(edgeNodes, user);
+      const nearestCentral = findNearestNode(centralNodes, user);
 
       // Calculate latency considering both edge and central nodes
       let minDistance = Number.POSITIVE_INFINITY;
@@ -1267,8 +1236,6 @@ export default function Component() {
           setAutoAssignment={setAutoAssignment}
           algorithms={algorithms}
           calculateDistance={calculateDistance}
-          findNearestEdge={findNearestEdge}
-          findNearestCentral={findNearestCentral}
           getAllNodes={getAllNodes}
           calculateLatency={calculateLatency}
           connectUserToNode={connectUserToNode}
