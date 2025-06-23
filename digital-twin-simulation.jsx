@@ -9,6 +9,7 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
+import { calculateDistance } from "@/lib/helper";
 
 export default function Component() {
   const canvasRef = useRef(null);
@@ -70,11 +71,6 @@ export default function Component() {
     markov: "Markov Chain",
     neural: "Neural Network",
     gravity: "Gravity Model",
-  };
-
-  // Calculate distance between two points
-  const calculateDistance = (x1, y1, x2, y2) => {
-    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
   };
 
   // Find nearest edge node to a user
