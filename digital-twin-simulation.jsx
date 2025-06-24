@@ -9,7 +9,8 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
-import { calculateDistance, findNearestNode, getAllNodes } from "@/lib/helper";
+import { calculateDistance, findNearestNode, getAllNodes, calculateLatency } from "@/lib/helper";
+import { CentralNode, EdgeNode, UserNode } from "./lib/components";
 
 export default function Component() {
   const canvasRef = useRef(null);
@@ -18,6 +19,7 @@ export default function Component() {
 
   // Central nodes - main servers/coordinators
   const [centralNodes, setCentralNodes] = useState([]);
+  const [graph, setGraph] = useState(new Map()); // adjacency list for graph representation
 
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState([1]);
@@ -67,39 +69,20 @@ export default function Component() {
   // Algorithms for user expectancy calculation
   const algorithms = {
     linear: "Linear Prediction",
-    kalman: "Kalman Filter",
-    markov: "Markov Chain",
-    neural: "Neural Network",
-    gravity: "Gravity Model",
+    // kalman: "Kalman Filter",
+    // markov: "Markov Chain",
+    // neural: "Neural Network",
+    // gravity: "Gravity Model",
   };
 
-
-  // Calculate latency based on connection
-  const calculateLatency = (user, nodeId, nodeType) => {
-    let targetNode = null;
-    if (nodeType === "edge") {
-      targetNode = edgeNodes.find((edge) => edge.id === nodeId);
-    } else if (nodeType === "central") {
-      targetNode = centralNodes.find((central) => central.id === nodeId);
-    }
-
-    if (!targetNode) return 100 + Math.random() * 50;
-
-    const distance = calculateDistance(
-      user.x,
-      user.y,
-      targetNode.x,
-      targetNode.y
-    );
-    return Math.round(distance * 0.3 + Math.random() * 15);
-  };
 
   // Manually connect user to a specific node
   const connectUserToNode = (userId, nodeId, nodeType) => {
+    const allNodes = getAllNodes(edgeNodes, centralNodes);
     setUsers((prevUsers) =>
       prevUsers.map((user) => {
         if (user.id === userId) {
-          const latency = calculateLatency(user, nodeId, nodeType);
+          const latency = calculateLatency(user, nodeId, allNodes);
           return {
             ...user,
             assignedEdge: nodeType === "edge" ? nodeId : null,
@@ -1228,7 +1211,6 @@ export default function Component() {
           setAutoAssignment={setAutoAssignment}
           algorithms={algorithms}
           calculateDistance={calculateDistance}
-          calculateLatency={calculateLatency}
           connectUserToNode={connectUserToNode}
           disconnectUser={disconnectUser}
           resetAllConnections={resetAllConnections}
