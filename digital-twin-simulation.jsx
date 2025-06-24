@@ -9,7 +9,7 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
-import { calculateDistance, findNearestNode, getAllNodes, calculateLatency } from "@/lib/helper";
+import { calculateDistance, findNearestNode, getAllNodes } from "@/lib/helper";
 import { CentralNode, EdgeNode, UserNode } from "./lib/components";
 
 export default function Component() {
