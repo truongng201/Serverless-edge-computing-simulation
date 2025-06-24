@@ -225,7 +225,7 @@ export default function ControlPanelContent({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Size: {selectedUser.size}px</Label>
+                  <Label className="text-xs">Size: {selectedUser.size}</Label>
                   <Slider value={[selectedUser.size]} onValueChange={([value]) => updateSelectedUser({ size: value })} max={20} min={5} step={1} className="h-4" />
                 </div>
                 <div className="mt-2 text-xs text-gray-600">
@@ -362,7 +362,7 @@ export default function ControlPanelContent({
               <Slider value={userSpeed} onValueChange={setUserSpeed} max={10} min={0.5} step={0.5} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Size: {userSize[0]}px</Label>
+              <Label className="text-xs">Size: {userSize[0]}</Label>
               <Slider value={userSize} onValueChange={setUserSize} max={15} min={5} step={1} />
             </div>
           </CardContent>
@@ -393,7 +393,7 @@ export default function ControlPanelContent({
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Coverage: {centralCoverage[0]}px</Label>
-              <Slider value={centralCoverage} onValueChange={setCentralCoverage} max={300} min={100} step={20} />
+              <Slider value={centralCoverage} onValueChange={setCentralCoverage} max={300} min={0} step={20} />
             </div>
             {selectedCentral && (
               <div className="p-2 bg-blue-50 rounded text-xs">
@@ -429,7 +429,7 @@ export default function ControlPanelContent({
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Coverage: {edgeCoverage[0]}px</Label>
-              <Slider value={edgeCoverage} onValueChange={setEdgeCoverage} max={200} min={50} step={10} />
+              <Slider value={edgeCoverage} onValueChange={setEdgeCoverage} max={200} min={0} step={10} />
             </div>
             {selectedEdge && (
               <div className="p-2 bg-green-50 rounded text-xs">

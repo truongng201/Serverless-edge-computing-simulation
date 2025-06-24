@@ -9,6 +9,8 @@ import SimulationCanvas from "@/components/simulation/SimulationCanvas";
 import EditModeDescription from "@/components/simulation/EditModeDescription";
 import ControlPanelContent from "@/components/simulation/ControlPanelContent";
 import MetricsPanelContent from "@/components/simulation/MetricsPanelContent";
+import { calculateDistance, findNearestNode, getAllNodes, calculateLatency } from "@/lib/helper";
+import { CentralNode, EdgeNode, UserNode } from "./lib/components";
 
 export default function Component() {
   const canvasRef = useRef(null);
@@ -17,6 +19,7 @@ export default function Component() {
 
   // Central nodes - main servers/coordinators
   const [centralNodes, setCentralNodes] = useState([]);
+  const [graph, setGraph] = useState(new Map()); // adjacency list for graph representation
 
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState([1]);
@@ -39,11 +42,11 @@ export default function Component() {
 
   // Edge settings
   const [edgeCapacity, setEdgeCapacity] = useState([100]);
-  const [edgeCoverage, setEdgeCoverage] = useState([120]);
+  const [edgeCoverage, setEdgeCoverage] = useState([0]);
 
   // Central node settings
   const [centralCapacity, setCentralCapacity] = useState([500]);
-  const [centralCoverage, setCentralCoverage] = useState([200]);
+  const [centralCoverage, setCentralCoverage] = useState([0]);
 
   // Zoom and Pan state
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -66,10 +69,10 @@ export default function Component() {
   // Algorithms for user expectancy calculation
   const algorithms = {
     linear: "Linear Prediction",
-    kalman: "Kalman Filter",
-    markov: "Markov Chain",
-    neural: "Neural Network",
-    gravity: "Gravity Model",
+    // kalman: "Kalman Filter",
+    // markov: "Markov Chain",
+    // neural: "Neural Network",
+    // gravity: "Gravity Model",
   };
 
   // Calculate distance between two points
@@ -189,10 +192,11 @@ export default function Component() {
 
   // Manually connect user to a specific node
   const connectUserToNode = (userId, nodeId, nodeType) => {
+    const allNodes = getAllNodes(edgeNodes, centralNodes);
     setUsers((prevUsers) =>
       prevUsers.map((user) => {
         if (user.id === userId) {
-          const latency = calculateLatency(user, nodeId, nodeType);
+          const latency = calculateLatency(user, nodeId, allNodes);
           return {
             ...user,
             assignedEdge: nodeType === "edge" ? nodeId : null,
@@ -208,49 +212,67 @@ export default function Component() {
 
   // Disconnect user from all nodes
   const disconnectUser = (userId) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => {
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        const user = prevUsers[i];
         if (user.id === userId) {
-          return {
+          newUsers.push({
             ...user,
             assignedEdge: null,
             assignedCentral: null,
             manualConnection: false,
             latency: 100 + Math.random() * 50,
-          };
+          });
+        } else {
+          newUsers.push(user);
         }
-        return user;
-      })
-    );
+      }
+      return newUsers;
+    });
   };
 
   // Reset all manual connections
   const resetAllConnections = () => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) => ({
-        ...user,
-        manualConnection: false,
-      }))
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        newUsers.push({ ...prevUsers[i], manualConnection: false });
+      }
+      return newUsers;
+    });
   };
 
   // Update selected user properties
   const updateSelectedUser = (updates) => {
     if (!selectedUser) return;
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === selectedUser.id ? { ...user, ...updates } : user
-      )
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        const user = prevUsers[i];
+        if (user.id === selectedUser.id) {
+          newUsers.push({ ...user, ...updates });
+        } else {
+          newUsers.push(user);
+        }
+      }
+      return newUsers;
+    });
     setSelectedUser((prev) => ({ ...prev, ...updates }));
   };
 
   // Delete selected user
   const deleteSelectedUser = () => {
     if (!selectedUser) return;
-    setUsers((prevUsers) =>
-      prevUsers.filter((user) => user.id !== selectedUser.id)
-    );
+    setUsers((prevUsers) => {
+      const newUsers = [];
+      for (let i = 0; i < prevUsers.length; i++) {
+        if (prevUsers[i].id !== selectedUser.id) {
+          newUsers.push(prevUsers[i]);
+        }
+      }
+      return newUsers;
+    });
     setSelectedUser(null);
   };
 
@@ -369,8 +391,8 @@ export default function Component() {
         };
       }
 
-      const nearestEdge = findNearestEdge(user);
-      const nearestCentral = findNearestCentral(user);
+      const nearestEdge = findNearestNode(edgeNodes, user);
+      const nearestCentral = findNearestNode(centralNodes, user);
 
       // Calculate latency using experimental formula for both edge and central nodes
       let bestLatency = Number.POSITIVE_INFINITY;
@@ -766,7 +788,7 @@ export default function Component() {
     // Draw connections between central and edge nodes
     centralNodes.forEach((central) => {
       edgeNodes.forEach((edge) => {
-        ctx.strokeStyle = "rgba(99, 102, 241, 0.2)";
+        ctx.strokeStyle = "rgba(99, 101, 241, 0.63)";
         ctx.lineWidth = 2 / zoomLevel;
         ctx.setLineDash([10 / zoomLevel, 5 / zoomLevel]);
         ctx.beginPath();
@@ -776,6 +798,22 @@ export default function Component() {
         ctx.setLineDash([]);
       });
     });
+
+    // Draw connections between edge nodes
+    for (let i = 0; i < edgeNodes.length; i++) {
+      for (let j = i + 1; j < edgeNodes.length; j++) {
+        const edgeA = edgeNodes[i];
+        const edgeB = edgeNodes[j];
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.6)"; // subtle green
+        ctx.lineWidth = 1.5 / zoomLevel;
+        ctx.setLineDash([6 / zoomLevel, 4 / zoomLevel]);
+        ctx.beginPath();
+        ctx.moveTo(edgeA.x, edgeA.y);
+        ctx.lineTo(edgeB.x, edgeB.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
 
     // Draw central nodes
     centralNodes.forEach((central) => {
@@ -960,8 +998,8 @@ export default function Component() {
         );
         if (assignedCentral) {
           ctx.strokeStyle = user.manualConnection
-            ? "rgba(99, 102, 241, 0.8)"
-            : "rgba(99, 102, 241, 0.4)";
+            ? "rgba(99, 102,241, 0.8)"
+            : "rgba(99, 102,241, 0.4)";
           ctx.lineWidth = user.manualConnection ? 2 / zoomLevel : 1 / zoomLevel;
           if (user.manualConnection) {
             ctx.setLineDash([]);
@@ -1214,7 +1252,7 @@ export default function Component() {
       case "both":
         return "Full Edit: Drag nodes and users • Click to select";
       default:
-        return "Click to add users • Mouse wheel to zoom • Ctrl+drag to pan";
+        return "Click to add users • Mouse wheel to zoom • Ctrl+drag to pan the map";
     }
   };
 
@@ -1312,10 +1350,6 @@ export default function Component() {
           setAutoAssignment={setAutoAssignment}
           algorithms={algorithms}
           calculateDistance={calculateDistance}
-          findNearestEdge={findNearestEdge}
-          findNearestCentral={findNearestCentral}
-          getAllNodes={getAllNodes}
-          calculateLatency={calculateLatency}
           connectUserToNode={connectUserToNode}
           disconnectUser={disconnectUser}
           resetAllConnections={resetAllConnections}
