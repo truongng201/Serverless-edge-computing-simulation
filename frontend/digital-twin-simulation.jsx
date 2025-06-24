@@ -117,7 +117,7 @@ export default function Component() {
     ];
   };
 
-  // Calculate latency based on connection
+  // Calculate latency based on connection using experimental formula
   const calculateLatency = (user, nodeId, nodeType) => {
     let targetNode = null;
     if (nodeType === "edge") {
@@ -128,13 +128,63 @@ export default function Component() {
 
     if (!targetNode) return 100 + Math.random() * 50;
 
-    const distance = calculateDistance(
-      user.x,
-      user.y,
-      targetNode.x,
-      targetNode.y
-    );
-    return Math.round(distance * 0.3 + Math.random() * 15);
+    // Generate random data size s(u,t) in range [100, 500] MB
+    const dataSize = 100 + Math.random() * 400; // MB
+    
+    // Determine if it's Cold Start or Warm Start
+    const isWarmStart = targetNode.isWarm || false; // I_{u,v,t}
+    const coldStartIndicator = isWarmStart ? 1 : 0;
+    
+    // Calculate Communication Delay: d_com = s(u,t) × τ(v_u,t, v)
+    let unitTransmissionDelay; // τ (ms/MB)
+    if (nodeType === "edge") {
+      // Between APs: [0.2, 1] ms/MB
+      unitTransmissionDelay = 0.2 + Math.random() * 0.8;
+    } else {
+      // To Cloud: [2, 10] ms/MB  
+      unitTransmissionDelay = 2 + Math.random() * 8;
+    }
+    const communicationDelay = dataSize * unitTransmissionDelay;
+    
+    // Calculate Processing Delay: d_proc = (1 - I_{u,v,t}) × d_cold + s(u,t) × ρ_{u,v}
+    
+    // Cold start delay [100, 500] ms
+    const coldStartDelay = 100 + Math.random() * 400;
+    
+    // Unit processing time ρ_{u,v} (ms/MB)
+    let unitProcessingTime;
+    if (nodeType === "edge") {
+      // Cloudlet: [0.5, 2] ms/MB
+      unitProcessingTime = 0.5 + Math.random() * 1.5;
+    } else {
+      // Cloud: 0.05 ms/MB
+      unitProcessingTime = 0.05;
+    }
+    
+    const processingDelay = (1 - coldStartIndicator) * coldStartDelay + dataSize * unitProcessingTime;
+    
+    // Total Service Delay: D(u,v,t) = d_com + d_proc
+    const totalLatency = communicationDelay + processingDelay;
+    
+    // Mark node as warm for next requests (simulating container reuse)
+    if (targetNode) {
+      targetNode.isWarm = true;
+      targetNode.lastAccessTime = Date.now();
+    }
+    
+    // Store additional metrics for debugging/display
+    if (targetNode) {
+      targetNode.lastMetrics = {
+        dataSize: Math.round(dataSize),
+        communicationDelay: Math.round(communicationDelay),
+        processingDelay: Math.round(processingDelay),
+        isWarmStart: isWarmStart,
+        unitTransmissionDelay: unitTransmissionDelay.toFixed(3),
+        unitProcessingTime: unitProcessingTime.toFixed(3)
+      };
+    }
+    
+    return Math.round(totalLatency);
   };
 
   // Manually connect user to a specific node
@@ -322,44 +372,33 @@ export default function Component() {
       const nearestEdge = findNearestEdge(user);
       const nearestCentral = findNearestCentral(user);
 
-      // Calculate latency considering both edge and central nodes
-      let minDistance = Number.POSITIVE_INFINITY;
+      // Calculate latency using experimental formula for both edge and central nodes
+      let bestLatency = Number.POSITIVE_INFINITY;
       let assignedEdge = null;
       let assignedCentral = null;
 
       if (nearestEdge) {
-        const edgeDistance = calculateDistance(
-          user.x,
-          user.y,
-          nearestEdge.x,
-          nearestEdge.y
-        );
-        if (edgeDistance < minDistance) {
-          minDistance = edgeDistance;
+        const edgeLatency = calculateLatency(user, nearestEdge.id, "edge");
+        if (edgeLatency < bestLatency) {
+          bestLatency = edgeLatency;
           assignedEdge = nearestEdge.id;
           assignedCentral = null;
         }
       }
 
       if (nearestCentral) {
-        const centralDistance = calculateDistance(
-          user.x,
-          user.y,
-          nearestCentral.x,
-          nearestCentral.y
-        );
-        if (centralDistance < minDistance) {
-          minDistance = centralDistance;
+        const centralLatency = calculateLatency(user, nearestCentral.id, "central");
+        if (centralLatency < bestLatency) {
+          bestLatency = centralLatency;
           assignedEdge = null;
           assignedCentral = nearestCentral.id;
         }
       }
 
       // If no nodes available, set high latency
-      const latency =
-        minDistance === Number.POSITIVE_INFINITY
-          ? 100 + Math.random() * 50
-          : Math.round(minDistance * 0.3 + Math.random() * 15);
+      const latency = bestLatency === Number.POSITIVE_INFINITY
+        ? 100 + Math.random() * 50
+        : bestLatency;
 
       return {
         ...user,
@@ -1037,6 +1076,34 @@ export default function Component() {
     draw();
   }, [draw]);
 
+  // Container timeout management - reset warm state after 30 seconds of inactivity
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentTime = Date.now();
+      const timeoutDuration = 30000; // 30 seconds
+
+      // Reset warm state for edge nodes
+      setEdgeNodes(prev => prev.map(edge => {
+        if (edge.isWarm && edge.lastAccessTime && 
+            (currentTime - edge.lastAccessTime) > timeoutDuration) {
+          return { ...edge, isWarm: false, lastAccessTime: null };
+        }
+        return edge;
+      }));
+
+      // Reset warm state for central nodes
+      setCentralNodes(prev => prev.map(central => {
+        if (central.isWarm && central.lastAccessTime && 
+            (currentTime - central.lastAccessTime) > timeoutDuration) {
+          return { ...central, isWarm: false, lastAccessTime: null };
+        }
+        return central;
+      }));
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   const resetSimulation = () => {
     clearEverything();
   };
@@ -1050,6 +1117,10 @@ export default function Component() {
       currentLoad: 0,
       replicas: [],
       coverage: edgeCoverage[0],
+      isWarm: false,
+      lastAccessTime: null,
+      lastMetrics: null,
+      type: "cloudlet"
     };
     setEdgeNodes((prev) => [...prev, newEdge]);
   };
@@ -1073,6 +1144,10 @@ export default function Component() {
       currentLoad: 0,
       coverage: centralCoverage[0],
       type: "main",
+      isWarm: false,
+      lastAccessTime: null,
+      lastMetrics: null,
+      nodeType: "cloud"
     };
     setCentralNodes((prev) => [...prev, newCentral]);
   };
