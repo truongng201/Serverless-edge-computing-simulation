@@ -64,7 +64,14 @@ export default function ControlPanelContent({
   zoomOut,
   resetZoom,
   leftPanelOpen,
-  setLeftPanelOpen
+  setLeftPanelOpen,
+  // LSTM-related props
+  isLSTMInitialized,
+  isLSTMTrained,
+  lstmPredictor,
+  trajectoryMode,
+  setTrajectoryMode,
+  initializeLSTM
 }) {
   return (
     <>
@@ -264,6 +271,67 @@ export default function ControlPanelContent({
                 All
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* LSTM Control Panel */}
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              🧠 LSTM Model Control
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-xs text-gray-600">
+              Status: {!isLSTMInitialized ? "Not Initialized" : 
+                      !isLSTMTrained ? "Initialized, Not Trained" : 
+                      "Ready for Prediction"}
+            </div>
+            
+            {!isLSTMInitialized && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => initializeLSTM("easy")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  Load DACT Easy
+                </Button>
+                <Button
+                  onClick={() => initializeLSTM("strict")}
+                  className="bg-purple-700 hover:bg-purple-800 text-white"
+                  size="sm"
+                >
+                  Load DACT Strict
+                </Button>
+              </div>
+            )}
+            
+            {isLSTMInitialized && (
+              <div className="space-y-2">
+                <div className="text-xs">
+                  Model: {isLSTMTrained ? "✅ Trained" : "⏳ Training..."}
+                </div>
+                
+                {lstmPredictor && (
+                  <div className="text-xs text-gray-500">
+                    Users: {lstmPredictor.getDACTUsers?.()?.length || 0}
+                  </div>
+                )}
+                
+                <Button
+                  onClick={() => setTrajectoryMode(!trajectoryMode)}
+                  className={`w-full text-white ${
+                    trajectoryMode 
+                      ? "bg-orange-600 hover:bg-orange-700" 
+                      : "bg-gray-600 hover:bg-gray-700"
+                  }`}
+                  size="sm"
+                >
+                  {trajectoryMode ? "DACT Mode ON" : "Random Mode"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

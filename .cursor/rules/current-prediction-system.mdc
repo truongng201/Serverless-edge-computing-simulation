@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+# Current Prediction System Architecture
+
+## Main Application Structure
+The hierarchical digital twin simulation is built in [digital-twin-simulation.jsx](mdc:digital-twin-simulation.jsx) - a React component managing the entire simulation environment.
+
+## Core Components
+
+### Canvas System
+- **SimulationCanvas**: Main drawing area with grid background (50x50px)
+- **Real-time Animation**: 10 FPS animation loop at lines 630-665
+- **Interactive Elements**: Click/drag functionality for users and nodes
+
+### Node Types
+1. **Edge Nodes (Cloudlets)**: Green circles, finite capacity, edge computing
+2. **Central Nodes (Cloud)**: Blue squares, high capacity, centralized processing  
+3. **Users**: Red circles, mobile entities with velocity vectors
+
+## Key Functions for ML Integration
+
+### `optimizeReplicaPlacement()` - Line ~380  
+- **Purpose**: Use predictions to optimize container placement
+- **Current Logic**: Assigns users to nearest available nodes
+- **Enhancement Needed**: Use ML predictions for proactive placement
+
+### `calculateLatency(user, nodeId, nodeType)` - Line ~124
+- **Purpose**: Advanced latency calculation with warm/cold starts
+- **Components**: Communication delay + processing delay
+- **ML Usage**: Could benefit from predicted user locations for pre-warming
+
+### Prediction Integration Points
+1. **Algorithm Selection**: UI dropdown in control panel
+2. **Path Visualization**: Purple dashed lines for predicted paths
+3. **Performance Metrics**: Display in right panel metrics
+4. **Real-time Updates**: Continuous prediction during simulation
+
+## UI Components
+
+### Control Panels
+- **Left Panel**: [ControlPanelContent.jsx](mdc:components/simulation/ControlPanelContent.jsx)
+- **Right Panel**: [MetricsPanelContent.jsx](mdc:components/simulation/MetricsPanelContent.jsx)
+- **Algorithm Selector**: Dropdown for prediction method selection
+
+### State Management
+- **React Hooks**: useState for all simulation state
+- **Real-time Updates**: useEffect for animation and container timeouts
+- **Canvas Drawing**: useCallback with stateRef for performance
+
+## Performance Considerations
+- **Grid Background**: Efficient rendering with zoom/pan support
+- **Animation Optimization**: 100ms intervals with selective updates
+- **Memory Management**: Container timeout after 30 seconds inactivity
+- **Latency Modeling**: Realistic network delays and processing times
